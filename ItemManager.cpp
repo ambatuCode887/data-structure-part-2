@@ -79,7 +79,6 @@ namespace ItemManager {
         displayInOrder(node->right);
     }
 
-    // 5. THE MODULE SUB-MENU
     void runMenu() {
         int choice;
         do {
@@ -87,8 +86,8 @@ namespace ItemManager {
             cout << "      [MODULE 4] ITEM SEARCH & MANAGEMENT          \n";
             cout << "===================================================\n";
             cout << "  [1] Add New Item\n";
-            cout << "  [2] Search Item by ID (Fast - O(log n))\n";
-            cout << "  [3] Search Item by Name (Linear - O(n))\n";
+            cout << "  [2] Search Item by ID - O(log n)\n";
+            cout << "  [3] Search Item by Name - O(n)\n";
             cout << "  [4] Display All Items (Sorted by ID)\n";
             cout << "  [0] Return to Main Menu\n";
             cout << "===================================================\n";
@@ -106,7 +105,7 @@ namespace ItemManager {
                 getline(cin, name);
                 cout << "  Enter Category: ";
                 getline(cin, cat);
-                cout << "  Enter Location (e.g., Zone A, Shelf 2): ";
+                cout << "  Enter Location (e.g., Zone A, Zone B): ";
                 getline(cin, loc);
 
                 root = insertItem(root, id, name, cat, loc);

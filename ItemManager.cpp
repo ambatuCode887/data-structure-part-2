@@ -7,23 +7,67 @@ using namespace std;
 
 namespace ItemManager {
 
-    // Global root pointer for the Item Database
     ItemNode* root = nullptr;
 
-    // Helper function to clear console input
     void clearInput() {
         cin.clear();
         cin.ignore(10000, '\n');
     }
 
-    // 1. BST INSERTION O(log n)
+    // --- AVL Utility Functions ---
+
+    int getMax(int a, int b) {
+        return (a > b) ? a : b;
+    }
+
+    int getNodeHeight(ItemNode* node) {
+        if (node == nullptr) return 0;
+        return node->height;
+    }
+
+    int getBalanceFactor(ItemNode* node) {
+        if (node == nullptr) return 0;
+        return getNodeHeight(node->left) - getNodeHeight(node->right);
+    }
+
+    // pointer manipulation for right rotation
+    ItemNode* rotateRight(ItemNode* y) {
+        ItemNode* x = y->left;
+        ItemNode* T2 = x->right;
+
+        x->right = y;
+        y->left = T2;
+
+        y->height = getMax(getNodeHeight(y->left), getNodeHeight(y->right)) + 1;
+        x->height = getMax(getNodeHeight(x->left), getNodeHeight(x->right)) + 1;
+
+        return x;
+    }
+
+    // pointer manipulation for left rotation
+    ItemNode* rotateLeft(ItemNode* x) {
+        ItemNode* y = x->right;
+        ItemNode* T2 = y->left;
+
+        y->left = x;
+        x->right = T2;
+
+        x->height = getMax(getNodeHeight(x->left), getNodeHeight(x->right)) + 1;
+        y->height = getMax(getNodeHeight(y->left), getNodeHeight(y->right)) + 1;
+
+        return y;
+    }
+
+    // --- Main Item Functions ---
     ItemNode* insertItem(ItemNode* node, int id, string name, string cat, string loc) {
+        // normal bst insert first
         if (node == nullptr) {
             ItemNode* newNode = new ItemNode;
             newNode->itemID = id;
             newNode->itemName = name;
             newNode->category = cat;
             newNode->location = loc;
+            newNode->height = 1; 
             newNode->left = nullptr;
             newNode->right = nullptr;
             return newNode;
@@ -34,12 +78,39 @@ namespace ItemManager {
         } else if (id > node->itemID) {
             node->right = insertItem(node->right, id, name, cat, loc);
         } else {
-            cout << "  [Error] Item ID " << id << " already exists in the system.\n";
+            cout << "Error: Item ID already exists.\n";
+            return node;
         }
-        return node;
+
+        // update height of current node
+        node->height = 1 + getMax(getNodeHeight(node->left), getNodeHeight(node->right));
+
+        // check if it became unbalanced
+        int balance = getBalanceFactor(node);
+
+        // left heavy
+        if (balance > 1 && id < node->left->itemID)
+            return rotateRight(node);
+
+        // right heavy
+        if (balance < -1 && id > node->right->itemID)
+            return rotateLeft(node);
+
+        // left-right case
+        if (balance > 1 && id > node->left->itemID) {
+            node->left = rotateLeft(node->left);
+            return rotateRight(node);
+        }
+
+        // right-left case
+        if (balance < -1 && id < node->right->itemID) {
+            node->right = rotateRight(node->right);
+            return rotateLeft(node);
+        }
+
+        return node; 
     }
 
-    // 2. BST SEARCH BY ID O(log n)
     ItemNode* searchByID(ItemNode* node, int targetID) {
         if (node == nullptr || node->itemID == targetID) {
             return node;
@@ -50,46 +121,127 @@ namespace ItemManager {
         return searchByID(node->right, targetID);
     }
 
-    // 3. TREE TRAVERSAL SEARCH BY NAME O(n)
-    // Note: Since the tree is sorted by ID, searching by string requires checking every node.
     void searchByName(ItemNode* node, string targetName, bool& found) {
         if (node == nullptr) return;
 
         searchByName(node->left, targetName, found);
 
         if (node->itemName == targetName) {
-            cout << "  Found: ID [" << node->itemID << "] | Location: " << node->location << "\n";
+            cout << "Found -> ID: " << node->itemID << " | Location: " << node->location << "\n";
             found = true;
         }
 
         searchByName(node->right, targetName, found);
     }
 
-    // 4. IN-ORDER TRAVERSAL (Displays items sorted by ID)
+    ItemNode* getMinValueNode(ItemNode* node) {
+        ItemNode* curr = node;
+        while (curr && curr->left != nullptr) {
+            curr = curr->left;
+        }
+        return curr;
+    }
+
+    ItemNode* deleteItem(ItemNode* node, int id) {
+        if (node == nullptr) return node;
+
+        if (id < node->itemID) {
+            node->left = deleteItem(node->left, id);
+        } else if (id > node->itemID) {
+            node->right = deleteItem(node->right, id);
+        } else {
+            // node with only one child or no child
+            if (node->left == nullptr) {
+                ItemNode* temp = node->right;
+                delete node;
+                return temp;
+            } else if (node->right == nullptr) {
+                ItemNode* temp = node->left;
+                delete node;
+                return temp;
+            }
+
+            // node with two children, get inorder successor
+            ItemNode* temp = getMinValueNode(node->right);
+            node->itemID = temp->itemID;
+            node->itemName = temp->itemName;
+            node->category = temp->category;
+            node->location = temp->location;
+            node->right = deleteItem(node->right, temp->itemID);
+        }
+
+        if (node == nullptr) return node;
+
+        // balance the tree after deletion
+        node->height = 1 + getMax(getNodeHeight(node->left), getNodeHeight(node->right));
+        int balance = getBalanceFactor(node);
+
+        if (balance > 1 && getBalanceFactor(node->left) >= 0) return rotateRight(node);
+        if (balance > 1 && getBalanceFactor(node->left) < 0) {
+            node->left = rotateLeft(node->left);
+            return rotateRight(node);
+        }
+        if (balance < -1 && getBalanceFactor(node->right) <= 0) return rotateLeft(node);
+        if (balance < -1 && getBalanceFactor(node->right) > 0) {
+            node->right = rotateRight(node->right);
+            return rotateLeft(node);
+        }
+
+        return node;
+    }
+
+    void updateItem(ItemNode* root, int id) {
+        ItemNode* target = searchByID(root, id);
+        if (target != nullptr) {
+            cout << "Enter new Location for " << target->itemName << ": ";
+            getline(cin, target->location);
+            cout << "Location updated successfully.\n";
+        } else {
+            cout << "Item not found.\n";
+        }
+    }
+
     void displayInOrder(ItemNode* node) {
         if (node == nullptr) return;
-
         displayInOrder(node->left);
-        
         cout << left << setw(10) << node->itemID 
              << setw(25) << node->itemName 
              << setw(20) << node->category 
              << node->location << "\n";
-             
         displayInOrder(node->right);
+    }
+
+    void preloadData() {
+        if (root != nullptr) {
+            cout << "Data already loaded.\n";
+            return;
+        }
+        
+        cout << "Loading worst-case sequential data...\n";
+        
+        root = insertItem(root, 500, "Ergonomic Chair", "Furniture", "Zone C, Shelf 1");
+        root = insertItem(root, 400, "Standing Desk", "Furniture", "Zone C, Shelf 2");
+        root = insertItem(root, 300, "Mechanical Keyboard", "Electronics", "Zone A, Shelf 1");
+        root = insertItem(root, 200, "Wireless Mouse", "Electronics", "Zone A, Shelf 2");
+        root = insertItem(root, 100, "HDMI Cable", "Accessories", "Zone B, Shelf 1");
+        
+        cout << "Items loaded.\n";
     }
 
     void runMenu() {
         int choice;
         do {
             cout << "\n===================================================\n";
-            cout << "      [MODULE 4] ITEM SEARCH & MANAGEMENT          \n";
+            cout << "      [MODULE 4] WAREHOUSE ITEM DATABASE           \n";
             cout << "===================================================\n";
             cout << "  [1] Add New Item\n";
-            cout << "  [2] Search Item by ID - O(log n)\n";
-            cout << "  [3] Search Item by Name - O(n)\n";
-            cout << "  [4] Display All Items (Sorted by ID)\n";
-            cout << "  [0] Return to Main Menu\n";
+            cout << "  [2] Search by ID (O(log n))\n";
+            cout << "  [3] Search by Name (O(n))\n";
+            cout << "  [4] Update Item Location\n";
+            cout << "  [5] Delete Item\n";
+            cout << "  [6] Display All Items\n";
+            cout << "  [7] Preload Test Data\n";
+            cout << "  [0] Back\n";
             cout << "===================================================\n";
             cout << "  > ";
             cin >> choice;
@@ -98,57 +250,48 @@ namespace ItemManager {
             if (choice == 1) {
                 int id;
                 string name, cat, loc;
-                cout << "\n  Enter Item ID (Number): ";
-                cin >> id;
-                clearInput();
-                cout << "  Enter Item Name: ";
-                getline(cin, name);
-                cout << "  Enter Category: ";
-                getline(cin, cat);
-                cout << "  Enter Location (e.g., Zone A, Zone B): ";
-                getline(cin, loc);
-
+                cout << "Item ID: "; cin >> id; clearInput();
+                cout << "Name: "; getline(cin, name);
+                cout << "Category: "; getline(cin, cat);
+                cout << "Location: "; getline(cin, loc);
                 root = insertItem(root, id, name, cat, loc);
-                cout << "  [Success] Item added to the database.\n";
+                cout << "Item inserted.\n";
 
             } else if (choice == 2) {
                 int target;
-                cout << "\n  Enter Item ID to search: ";
-                cin >> target;
-                clearInput();
-
-                ItemNode* result = searchByID(root, target);
-                if (result != nullptr) {
-                    cout << "\n  [ITEM FOUND]\n";
-                    cout << "  Name:     " << result->itemName << "\n";
-                    cout << "  Category: " << result->category << "\n";
-                    cout << "  Location: " << result->location << "\n";
-                } else {
-                    cout << "\n  [ERROR] Item ID " << target << " not found in the warehouse.\n";
-                }
+                cout << "Enter Item ID: "; cin >> target; clearInput();
+                ItemNode* res = searchByID(root, target);
+                if (res) {
+                    cout << "\n--- ITEM FOUND ---\n";
+                    cout << "Name: " << res->itemName << "\nLocation: " << res->location << "\n";
+                } else cout << "Not found.\n";
 
             } else if (choice == 3) {
                 string target;
-                cout << "\n  Enter Exact Item Name to search: ";
-                getline(cin, target);
-                
+                cout << "Enter Exact Name: "; getline(cin, target);
                 bool found = false;
-                cout << "\n  [SEARCH RESULTS]\n";
                 searchByName(root, target, found);
-                if (!found) {
-                    cout << "  No items matched the name '" << target << "'.\n";
-                }
+                if (!found) cout << "No matches found.\n";
 
             } else if (choice == 4) {
-                cout << "\n========================================================================\n";
-                cout << left << setw(10) << "Item ID" << setw(25) << "Item Name" << setw(20) << "Category" << "Location\n";
-                cout << "========================================================================\n";
-                if (root == nullptr) {
-                    cout << "  Database is currently empty.\n";
-                } else {
-                    displayInOrder(root);
-                }
-                cout << "========================================================================\n";
+                int target;
+                cout << "Enter Item ID to update: "; cin >> target; clearInput();
+                updateItem(root, target);
+
+            } else if (choice == 5) {
+                int target;
+                cout << "Enter Item ID to delete: "; cin >> target; clearInput();
+                root = deleteItem(root, target);
+                cout << "Deletion processed.\n";
+
+            } else if (choice == 6) {
+                cout << left << setw(10) << "ID" << setw(25) << "Name" << setw(20) << "Category" << "Location\n";
+                cout << string(70, '-') << "\n";
+                if (!root) cout << "Empty database.\n";
+                else displayInOrder(root);
+
+            } else if (choice == 7) {
+                preloadData();
             }
 
         } while (choice != 0);

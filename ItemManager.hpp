@@ -9,7 +9,8 @@ namespace ItemManager {
         int itemID;
         std::string itemName;
         std::string category;
-        std::string location;
+        std::string location; 
+        int height;
         
         ItemNode* left;
         ItemNode* right;
@@ -17,12 +18,22 @@ namespace ItemManager {
 
     void runMenu();
 
-    ItemNode* insertItem(ItemNode* root, int id, std::string name, std::string cat, std::string loc);
-    ItemNode* searchByID(ItemNode* root, int targetID);
-    void searchByName(ItemNode* root, std::string targetName, bool& found);
-    void displayInOrder(ItemNode* root);
-    ItemNode* deleteItem(ItemNode* root, int targetID);
-    ItemNode* findMin(ItemNode* root);
+    // core functions
+    int getNodeHeight(ItemNode* node);
+    int getBalanceFactor(ItemNode* node);
+    ItemNode* rotateRight(ItemNode* y);
+    ItemNode* rotateLeft(ItemNode* x);
+    
+    ItemNode* insertItem(ItemNode* node, int id, std::string name, std::string cat, std::string loc);
+    ItemNode* searchByID(ItemNode* node, int targetID);
+    void searchByName(ItemNode* node, std::string targetName, bool& found);
+    void displayInOrder(ItemNode* node);
+    
+    // assignment requirements
+    ItemNode* getMinValueNode(ItemNode* node);
+    ItemNode* deleteItem(ItemNode* node, int id);
+    void updateItem(ItemNode* root, int id);
+    void preloadData();
 
 }
 

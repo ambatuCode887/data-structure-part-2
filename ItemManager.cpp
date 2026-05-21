@@ -17,7 +17,11 @@ namespace ItemManager {
     // --- AVL Utility Functions ---
 
     int getMax(int a, int b) {
-        return (a > b) ? a : b;
+        if (a > b) {
+            return a;
+        } else {
+            return b;
+        }
     }
 
     int getNodeHeight(ItemNode* node) {
@@ -161,7 +165,7 @@ namespace ItemManager {
                 return temp;
             }
 
-            // node with two children, get inorder successor
+            // node with two children, get successor of the right branch
             ItemNode* temp = getMinValueNode(node->right);
             node->itemID = temp->itemID;
             node->itemName = temp->itemName;

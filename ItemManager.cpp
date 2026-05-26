@@ -14,8 +14,9 @@ namespace ItemManager {
         cin.ignore(10000, '\n');
     }
 
-    // --- AVL Utility Functions ---
+    // AVL Utility Functions
 
+    // Compare two int and return larger int
     int getMax(int a, int b) {
         if (a > b) {
             return a;
@@ -25,46 +26,50 @@ namespace ItemManager {
     }
 
     int getNodeHeight(ItemNode* node) {
-        if (node == nullptr) return 0;
+        if (node == nullptr) {
+            return 0;
+        }
         return node->height;
     }
 
+    // Calculate left height minus right height to check for imbalance
     int getBalanceFactor(ItemNode* node) {
-        if (node == nullptr) return 0;
+        if (node == nullptr) {
+            return 0;
+        }
         return getNodeHeight(node->left) - getNodeHeight(node->right);
     }
 
-    // pointer manipulation for right rotation
-    ItemNode* rotateRight(ItemNode* y) {
-        ItemNode* x = y->left;
-        ItemNode* T2 = x->right;
+    // Pull the left child up and push the parent down to the right
+    ItemNode* rotateRight(ItemNode* oldTop) {
+        ItemNode* newTop = oldTop->left;
+        ItemNode* orphanedChild = newTop->right;
 
-        x->right = y;
-        y->left = T2;
+        newTop->right = oldTop;
+        oldTop->left = orphanedChild;
 
-        y->height = getMax(getNodeHeight(y->left), getNodeHeight(y->right)) + 1;
-        x->height = getMax(getNodeHeight(x->left), getNodeHeight(x->right)) + 1;
+        oldTop->height = getMax(getNodeHeight(oldTop->left), getNodeHeight(oldTop->right)) + 1;
+        newTop->height = getMax(getNodeHeight(newTop->left), getNodeHeight(newTop->right)) + 1;
 
-        return x;
+        return newTop;
     }
 
-    // pointer manipulation for left rotation
-    ItemNode* rotateLeft(ItemNode* x) {
-        ItemNode* y = x->right;
-        ItemNode* T2 = y->left;
+    // Pull the right child up and push the parent down to the left
+    ItemNode* rotateLeft(ItemNode* oldTop) {
+        ItemNode* newTop = oldTop->right;
+        ItemNode* orphanedChild = newTop->left;
 
-        y->left = x;
-        x->right = T2;
+        newTop->left = oldTop;
+        oldTop->right = orphanedChild;
 
-        x->height = getMax(getNodeHeight(x->left), getNodeHeight(x->right)) + 1;
-        y->height = getMax(getNodeHeight(y->left), getNodeHeight(y->right)) + 1;
+        oldTop->height = getMax(getNodeHeight(oldTop->left), getNodeHeight(oldTop->right)) + 1;
+        newTop->height = getMax(getNodeHeight(newTop->left), getNodeHeight(newTop->right)) + 1;
 
-        return y;
+        return newTop;
     }
 
-    // --- Main Item Functions ---
+    // Main Item Functions
     ItemNode* insertItem(ItemNode* node, int id, string name, string cat, string loc) {
-        // normal bst insert first
         if (node == nullptr) {
             ItemNode* newNode = new ItemNode;
             newNode->itemID = id;
@@ -86,27 +91,29 @@ namespace ItemManager {
             return node;
         }
 
-        // update height of current node
+        // Update height of the current node
         node->height = 1 + getMax(getNodeHeight(node->left), getNodeHeight(node->right));
 
-        // check if it became unbalanced
+        // Check if this node is now unbalanced
         int balance = getBalanceFactor(node);
 
-        // left heavy
-        if (balance > 1 && id < node->left->itemID)
+        // Left Heavy (Straight line)
+        if (balance > 1 && id < node->left->itemID) {
             return rotateRight(node);
+        }
 
-        // right heavy
-        if (balance < -1 && id > node->right->itemID)
+        // Right Heavy (Straight line)
+        if (balance < -1 && id > node->right->itemID) {
             return rotateLeft(node);
+        }
 
-        // left-right case
+        // Left-Right Zig-Zag
         if (balance > 1 && id > node->left->itemID) {
             node->left = rotateLeft(node->left);
             return rotateRight(node);
         }
 
-        // right-left case
+        // Right-Left Zig-Zag
         if (balance < -1 && id < node->right->itemID) {
             node->right = rotateRight(node->right);
             return rotateLeft(node);
@@ -119,14 +126,20 @@ namespace ItemManager {
         if (node == nullptr || node->itemID == targetID) {
             return node;
         }
+        
+        // Go left if the target is smaller, otherwise go right
         if (targetID < node->itemID) {
             return searchByID(node->left, targetID);
+        } else {
+            return searchByID(node->right, targetID);
         }
-        return searchByID(node->right, targetID);
     }
 
+    // Uses boolean and reference pointer to remember if we found target in any of recursion without using extra memory
     void searchByName(ItemNode* node, string targetName, bool& found) {
-        if (node == nullptr) return;
+        if (node == nullptr) {
+            return;
+        }
 
         searchByName(node->left, targetName, found);
 
@@ -138,23 +151,26 @@ namespace ItemManager {
         searchByName(node->right, targetName, found);
     }
 
+    // Helper function for delete, finds the smallest node in the right branch
     ItemNode* getMinValueNode(ItemNode* node) {
         ItemNode* curr = node;
-        while (curr && curr->left != nullptr) {
+        while (curr != nullptr && curr->left != nullptr) {
             curr = curr->left;
         }
         return curr;
     }
 
     ItemNode* deleteItem(ItemNode* node, int id) {
-        if (node == nullptr) return node;
+        if (node == nullptr) {
+            return node;
+        }
 
         if (id < node->itemID) {
             node->left = deleteItem(node->left, id);
         } else if (id > node->itemID) {
             node->right = deleteItem(node->right, id);
         } else {
-            // node with only one child or no child
+            // Found the node to delete
             if (node->left == nullptr) {
                 ItemNode* temp = node->right;
                 delete node;
@@ -165,7 +181,7 @@ namespace ItemManager {
                 return temp;
             }
 
-            // node with two children, get successor of the right branch
+            // For node with two children, copies the successor's data and delete the successor
             ItemNode* temp = getMinValueNode(node->right);
             node->itemID = temp->itemID;
             node->itemName = temp->itemName;
@@ -174,18 +190,24 @@ namespace ItemManager {
             node->right = deleteItem(node->right, temp->itemID);
         }
 
-        if (node == nullptr) return node;
+        if (node == nullptr) {
+            return node;
+        }
 
-        // balance the tree after deletion
+        // Rebalance the tree on the way back up
         node->height = 1 + getMax(getNodeHeight(node->left), getNodeHeight(node->right));
         int balance = getBalanceFactor(node);
 
-        if (balance > 1 && getBalanceFactor(node->left) >= 0) return rotateRight(node);
+        if (balance > 1 && getBalanceFactor(node->left) >= 0) {
+            return rotateRight(node);
+        }
         if (balance > 1 && getBalanceFactor(node->left) < 0) {
             node->left = rotateLeft(node->left);
             return rotateRight(node);
         }
-        if (balance < -1 && getBalanceFactor(node->right) <= 0) return rotateLeft(node);
+        if (balance < -1 && getBalanceFactor(node->right) <= 0) {
+            return rotateLeft(node);
+        }
         if (balance < -1 && getBalanceFactor(node->right) > 0) {
             node->right = rotateRight(node->right);
             return rotateLeft(node);
@@ -206,7 +228,9 @@ namespace ItemManager {
     }
 
     void displayInOrder(ItemNode* node) {
-        if (node == nullptr) return;
+        if (node == nullptr) {
+            return;
+        }
         displayInOrder(node->left);
         cout << left << setw(10) << node->itemID 
              << setw(25) << node->itemName 
@@ -254,45 +278,69 @@ namespace ItemManager {
             if (choice == 1) {
                 int id;
                 string name, cat, loc;
-                cout << "Item ID: "; cin >> id; clearInput();
-                cout << "Name: "; getline(cin, name);
-                cout << "Category: "; getline(cin, cat);
-                cout << "Location: "; getline(cin, loc);
+                cout << "Item ID: "; 
+                cin >> id; 
+                clearInput();
+                
+                cout << "Name: "; 
+                getline(cin, name);
+                cout << "Category: "; 
+                getline(cin, cat);
+                cout << "Location: "; 
+                getline(cin, loc);
+                
                 root = insertItem(root, id, name, cat, loc);
                 cout << "Item inserted.\n";
 
             } else if (choice == 2) {
                 int target;
-                cout << "Enter Item ID: "; cin >> target; clearInput();
+                cout << "Enter Item ID: "; 
+                cin >> target; 
+                clearInput();
+                
                 ItemNode* res = searchByID(root, target);
-                if (res) {
+                if (res != nullptr) {
                     cout << "\n--- ITEM FOUND ---\n";
                     cout << "Name: " << res->itemName << "\nLocation: " << res->location << "\n";
-                } else cout << "Not found.\n";
+                } else {
+                    cout << "Not found.\n";
+                }
 
             } else if (choice == 3) {
                 string target;
-                cout << "Enter Exact Name: "; getline(cin, target);
+                cout << "Enter Exact Name: "; 
+                getline(cin, target);
+                
                 bool found = false;
                 searchByName(root, target, found);
-                if (!found) cout << "No matches found.\n";
+                if (found == false) {
+                    cout << "No matches found.\n";
+                }
 
             } else if (choice == 4) {
                 int target;
-                cout << "Enter Item ID to update: "; cin >> target; clearInput();
+                cout << "Enter Item ID to update: "; 
+                cin >> target; 
+                clearInput();
                 updateItem(root, target);
 
             } else if (choice == 5) {
                 int target;
-                cout << "Enter Item ID to delete: "; cin >> target; clearInput();
+                cout << "Enter Item ID to delete: "; 
+                cin >> target; 
+                clearInput();
+                
                 root = deleteItem(root, target);
                 cout << "Deletion processed.\n";
 
             } else if (choice == 6) {
                 cout << left << setw(10) << "ID" << setw(25) << "Name" << setw(20) << "Category" << "Location\n";
                 cout << string(70, '-') << "\n";
-                if (!root) cout << "Empty database.\n";
-                else displayInOrder(root);
+                if (root == nullptr) {
+                    cout << "Empty database.\n";
+                } else {
+                    displayInOrder(root);
+                }
 
             } else if (choice == 7) {
                 preloadData();

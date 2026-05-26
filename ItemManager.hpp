@@ -18,7 +18,6 @@ namespace ItemManager {
 
     void runMenu();
 
-    // core functions
     int getNodeHeight(ItemNode* node);
     int getBalanceFactor(ItemNode* node);
     ItemNode* rotateRight(ItemNode* y);
@@ -29,7 +28,6 @@ namespace ItemManager {
     void searchByName(ItemNode* node, std::string targetName, bool& found);
     void displayInOrder(ItemNode* node);
     
-    // assignment requirements
     ItemNode* getMinValueNode(ItemNode* node);
     ItemNode* deleteItem(ItemNode* node, int id);
     void updateItem(ItemNode* root, int id);

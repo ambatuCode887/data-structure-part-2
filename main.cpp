@@ -1,68 +1,69 @@
 #include <iostream>
-#include <string>
-
-// Include everyone's connector files
-//#include "OrderManager.hpp"
-//#include "RobotManager.hpp"
-//#include "Navigation.hpp"
+#include "robotAssignment.hpp"
 #include "ItemManager.hpp"
-//#include "WarehouseLayout.hpp"
+#include "task3.hpp"
+#include "Task5_WarehouseLayout.hpp"
 
 using namespace std;
 
-void displayMenu() {
-    cout << "\n===================================================\n";
-    cout << "       WAREHOUSE ROBOT NAVIGATION SYSTEM           \n";
-    cout << "===================================================\n";
-    cout << "  [1] Order Management (Queue)\n";
-    cout << "  [2] Robot Assignment (Circular Queue)\n";
-    cout << "  [3] Robot Navigation & Reversal (Stack)\n";
-    cout << "  [4] Item Search & Management (Binary Search Tree)\n";
-    cout << "  [5] Warehouse Layout (Graph/Tree)\n";
-    cout << "  [0] Exit System\n";
-    cout << "===================================================\n";
-    cout << "Enter your choice: ";
+namespace OrderManagement
+{
+    void runMenu();
 }
 
-int main() {
+int main()
+{
+    RobotAssignment::CircularLinkedList<RobotAssignment::Robot> robotList;
+
     int choice;
+    do
+    {
+        cout << "\n===================================================\n";
+        cout << "     WAREHOUSE ROBOT NAVIGATION SYSTEM             \n";
+        cout << "===================================================\n";
+        cout << "  [1] Order Management          (Task 1)\n";
+        cout << "  [2] Robot Assignment           (Task 2)\n";
+        cout << "  [3] Robot Path Navigation      (Task 3)\n";
+        cout << "  [4] Item Database              (Task 4)\n";
+        cout << "  [5] Warehouse Layout           (Task 5)\n";
+        cout << "  [0] Exit\n";
+        cout << "===================================================\n";
+        cout << "  > ";
 
-    do {
-        displayMenu();
-        cin >> choice;
-
-        // Clear input buffer to prevent infinite loops on bad input
-        cin.clear(); 
+        if (!(cin >> choice))
+        {
+            cin.clear();
+            cin.ignore(10000, '\n');
+            cout << "Invalid input." << endl;
+            continue;
+        }
         cin.ignore(10000, '\n');
 
-        switch (choice) {
-            case 1:
-                cout << "\n--- Launching Order Management ---\n";
-                // Call OrderManager::runMenu();
-                break;
-            case 2:
-                cout << "\n--- Launching Robot Assignment ---\n";
-                // Call RobotManager::runMenu();
-                break;
-            case 3:
-                cout << "\n--- Launching Navigation ---\n";
-                // Call Navigation::runMenu();
-                break;
-            case 4:
-                cout << "\n--- Launching Item Search ---\n";
-                ItemManager::runMenu(); 
-                break;
-            case 5:
-                cout << "\n--- Launching Warehouse Layout ---\n";
-                // Call WarehouseLayout::runMenu();
-                break;
-            case 0:
-                cout << "\nShutting down warehouse systems. Goodbye!\n";
-                break;
-            default:
-                cout << "\nInvalid choice. Please enter 0-5.\n";
+        switch (choice)
+        {
+        case 1:
+            OrderManagement::runMenu();
+            break;
+        case 2:
+            RobotAssignment::menu(robotList);
+            break;
+        case 3:
+            RobotNavigation::runDemo();
+            break;
+        case 4:
+            ItemManager::runMenu();
+            break;
+        case 5:
+            runWarehouseMenu();
+            break;
+        case 0:
+            break;
+        default:
+            cout << "Invalid choice." << endl;
         }
+
     } while (choice != 0);
 
+    cout << "Goodbye!" << endl;
     return 0;
 }

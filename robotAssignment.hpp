@@ -28,6 +28,7 @@ namespace RobotAssignment
     };
 
     void helperTask(Robot &robot, string taskID);
+    void loadRobotsFromCSV(CircularLinkedList<Robot> &robotList, const string &filename);
 
     // circular linked list to store the robots
     template <typename T>

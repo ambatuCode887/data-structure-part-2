@@ -1,10 +1,61 @@
 #include <iostream>
 #include <string>
 #include "robotAssignment.hpp"
+#include <fstream>
+#include <sstream>
 using namespace std;
 
 namespace RobotAssignment
 {
+    void loadRobotsFromCSV(CircularLinkedList<Robot> &robotList, const string &filename)
+    {
+        ifstream file(filename);
+
+        if (!file.is_open())
+        {
+            cout << "Warning: Could not open " << filename << ". Starting with an empty list." << endl;
+            return;
+        }
+
+        string line;
+        // Skip the header row (robotID,robotName,status)
+        if (getline(file, line))
+        {
+            // Header skipped successfully
+        }
+
+        int loadCount = 0;
+        while (getline(file, line))
+        {
+            // Skip empty lines if any
+            if (line.empty())
+                continue;
+
+            stringstream ss(line);
+            string id, name, status;
+
+            // Split the row by commas
+            if (getline(ss, id, ',') && getline(ss, name, ',') && getline(ss, status, ','))
+            {
+                Robot newRobot;
+                newRobot.robotID = id;
+                newRobot.robotName = name;
+                newRobot.status = status;
+                newRobot.numAssignedTasks = 0;
+                newRobot.taskHead = nullptr;
+                newRobot.taskTail = nullptr;
+
+                // Insert into your existing circular linked list implementation
+                robotList.insertAtEnd(newRobot);
+                loadCount++;
+            }
+        }
+
+        file.close();
+        cout << "Successfully preloaded " << loadCount << " robots from " << filename << ".\n"
+             << endl;
+    }
+
     void helperTask(Robot &robot, string taskID)
     {
         Task *newTask = new Task();

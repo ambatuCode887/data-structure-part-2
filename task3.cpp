@@ -2,9 +2,9 @@
 #include <string>
 #include "task3.hpp"
 
+
 namespace RobotNavigation
 {
-
     using namespace std;
 
     struct Node
@@ -35,6 +35,7 @@ namespace RobotNavigation
             return top == nullptr;
         }
 
+        // Standard push for building history (Prints "Robot Moved: ...")
         void push(string cmd)
         {
             Node *newNode = new Node(cmd);
@@ -43,7 +44,22 @@ namespace RobotNavigation
             cout << "Robot Moved: " << cmd << endl;
         }
 
-        // POP: Remove and return the most recent movement step
+        // Silent pop used during manual backtracking corrections 
+        // to prevent duplicate tracking prints
+        string silentPop()
+        {
+            if (isEmpty())
+            {
+                return "";
+            }
+            Node *temp = top;
+            string poppedCmd = temp->command;
+            top = top->next;
+            delete temp;
+            return poppedCmd;
+        }
+
+        // POP: Used for the final reverse navigation log printout
         string pop()
         {
             if (isEmpty())
@@ -51,13 +67,7 @@ namespace RobotNavigation
                 cout << "The path is empty. Robot is at the start." << endl;
                 return "";
             }
-
-            Node *temp = top;                 // Temporarily hold the top node
-            string poppedCmd = temp->command; // Get the command inside it
-            top = top->next;                  // Move the top pointer to the next node
-
-            delete temp;      // Free up the memory
-            return poppedCmd; // Return the command so we can reverse it
+            return silentPop();
         }
 
         // PEEK: Look at the last step without removing it
@@ -75,40 +85,25 @@ namespace RobotNavigation
         {
             while (!isEmpty())
             {
-                pop();
+                silentPop();
             }
         }
     };
 
     string getReverseCommand(string cmd)
     {
-        if (cmd == "Move Forward")
-        {
-            return "Move Backward";
-        }
-        else if (cmd == "Move Backward")
-        {
-            return "Move Forward";
-        }
-        else if (cmd == "Turn Left")
-        {
-            return "Turn Right";
-        }
-        else if (cmd == "Turn Right")
-        {
-            return "Turn Left";
-        }
-        else
-        {
-            return "Stop";
-        }
+        if (cmd == "Move Forward")      return "Move Backward";
+        if (cmd == "Move Backward")     return "Move Forward";
+        if (cmd == "Turn Left")         return "Turn Right";
+        if (cmd == "Turn Right")        return "Turn Left";
+        return "Stop";
     }
 
     void runDemo()
     {
         PathStack robotPath;
 
-        cout << "\n--- Forward Navigation (To Item) ---" << endl;
+        cout << "--- Forward Navigation (To Item) ---" << endl;
 
         robotPath.push("Move Forward");
         robotPath.push("Turn Left");
@@ -117,7 +112,8 @@ namespace RobotNavigation
         cout << "\n[ALERT] Obstacle detected!" << endl;
         if (!robotPath.isEmpty())
         {
-            string badStep = robotPath.pop();
+            // Silently drop the blocked path step from stack data
+            string badStep = robotPath.silentPop(); 
             cout << "Backtracking: Executed '" << getReverseCommand(badStep) << "'." << endl;
 
             cout << "Taking a detour..." << endl;
@@ -126,13 +122,12 @@ namespace RobotNavigation
             robotPath.push("Move Forward");
         }
 
-        cout << "\nItem successfully picked up! Preparing to return...\n"
-             << endl;
-
-        cout << "Last recorded step before return: " << robotPath.peek() << endl;
+        cout << "\nItem successfully picked up! Preparing to return..." << endl;
+        cout << "\nLast recorded step before return: " << robotPath.peek() << endl;
 
         cout << "\n--- Reverse Navigation (Returning to Start) ---" << endl;
 
+        // Iterates through the corrected path history (6 steps)
         while (!robotPath.isEmpty())
         {
             string lastStep = robotPath.pop();

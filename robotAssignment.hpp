@@ -27,8 +27,13 @@ namespace RobotAssignment
         Task *taskTail = nullptr; // pointer to the tail of the task list for this robot
     };
 
+    template <typename T>
+    class CircularLinkedList;
+
     void helperTask(Robot &robot, string taskID);
-    void loadRobotsFromCSV(CircularLinkedList<Robot> &robotList, const string &filename);
+    void loadRobotsFromCSV(
+        CircularLinkedList<Robot> &robotList,
+        const string &filename);
 
     // circular linked list to store the robots
     template <typename T>

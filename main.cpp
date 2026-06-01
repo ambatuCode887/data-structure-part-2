@@ -14,6 +14,7 @@ namespace OrderManagement
 int main()
 {
     RobotAssignment::CircularLinkedList<RobotAssignment::Robot> robotList;
+    RobotAssignment::loadRobotsFromCSV(robotList, "robots.csv");
 
     int choice;
     do

@@ -7,9 +7,36 @@ using namespace std;
 
 namespace RobotAssignment
 {
+    string trimCSVField(string value)
+    {
+        while (!value.empty() && (value.back() == '\r' || value.back() == ' ' || value.back() == '\t'))
+        {
+            value.pop_back();
+        }
+
+        size_t start = 0;
+        while (start < value.length() && (value[start] == ' ' || value[start] == '\t'))
+        {
+            start++;
+        }
+
+        return value.substr(start);
+    }
+
     void loadRobotsFromCSV(CircularLinkedList<Robot> &robotList, const string &filename)
     {
         ifstream file(filename);
+
+        if (!file.is_open())
+        {
+            string sourceFile = __FILE__;
+            size_t slashPosition = sourceFile.find_last_of("\\/");
+            if (slashPosition != string::npos)
+            {
+                string fallbackPath = sourceFile.substr(0, slashPosition + 1) + filename;
+                file.open(fallbackPath);
+            }
+        }
 
         if (!file.is_open())
         {
@@ -38,9 +65,9 @@ namespace RobotAssignment
             if (getline(ss, id, ',') && getline(ss, name, ',') && getline(ss, status, ','))
             {
                 Robot newRobot;
-                newRobot.robotID = id;
-                newRobot.robotName = name;
-                newRobot.status = status;
+                newRobot.robotID = trimCSVField(id);
+                newRobot.robotName = trimCSVField(name);
+                newRobot.status = trimCSVField(status);
                 newRobot.numAssignedTasks = 0;
                 newRobot.taskHead = nullptr;
                 newRobot.taskTail = nullptr;

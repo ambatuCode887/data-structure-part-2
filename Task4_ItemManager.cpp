@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include "ItemManager.hpp"
+#include "Task4_ItemManager.hpp"
 
 using namespace std;
 
@@ -330,12 +330,12 @@ namespace ItemManager
             cout << "===================================================\n";
             cout << "  > ";
             cin >> choice;
-            if (cin.fail()) 
+            if (cin.fail())
             {
                 clearInput();
                 cout << "\n[!] Invalid input. Please enter a number from the menu.\n";
                 choice = -1;
-                continue; 
+                continue;
             }
             clearInput();
 
@@ -343,11 +343,11 @@ namespace ItemManager
             {
                 int id;
                 string name, cat, loc;
-                
-                cout << "Item ID: "; 
-                cin >> id; 
 
-                while (cin.fail()) 
+                cout << "Item ID: ";
+                cin >> id;
+
+                while (cin.fail())
                 {
                     clearInput();
                     cout << "[!] Invalid format. Item ID must be a number.\n";
@@ -361,8 +361,8 @@ namespace ItemManager
                     cout << "[!] Error: Item ID " << id << " already exists in the database.\n";
                     continue;
                 }
-                
-                cout << "Name: "; 
+
+                cout << "Name: ";
                 getline(cin, name);
                 while (name.empty())
                 {
@@ -370,7 +370,7 @@ namespace ItemManager
                     getline(cin, name);
                 }
 
-                cout << "Category: "; 
+                cout << "Category: ";
                 getline(cin, cat);
                 while (cat.empty())
                 {
@@ -378,17 +378,16 @@ namespace ItemManager
                     getline(cin, cat);
                 }
 
-                cout << "Location: "; 
+                cout << "Location: ";
                 getline(cin, loc);
                 while (loc.empty())
                 {
                     cout << "[!] Location cannot be empty. Please enter a valid location.\nLocation: ";
                     getline(cin, loc);
                 }
-                
+
                 root = insertItem(root, id, name, cat, loc);
                 cout << "Item successfully inserted.\n";
-
             }
             else if (choice == 2)
             {
@@ -436,10 +435,11 @@ namespace ItemManager
                 cin >> target;
                 clearInput();
 
-                if (searchByID(root, target) == nullptr) 
+                if (searchByID(root, target) == nullptr)
                 {
                     cout << "Error: Item ID " << target << " does not exist in the database.\n";
-                } else 
+                }
+                else
                 {
                     root = deleteItem(root, target);
                     cout << "Item successfully deleted.\n";

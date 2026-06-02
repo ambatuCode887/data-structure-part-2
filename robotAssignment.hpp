@@ -121,6 +121,13 @@ namespace RobotAssignment
             rotationPointer = nullptr;
         }
 
+        // Check if a robot with the given ID exists in the list
+        // Used by Task 3 to validate user input before starting navigation
+        bool robotExists(string robotID)
+        {
+            return isDuplicateRobotID(robotID);
+        }
+
         // void insertAtFirst(T data)
         // {
         //     if (!isValidStatus(data.status))

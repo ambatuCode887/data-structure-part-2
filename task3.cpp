@@ -1,143 +1,246 @@
+#include "task3.hpp"
 #include <iostream>
 #include <string>
-#include "task3.hpp"
+#include <fstream>
+
+namespace RobotNavigation {
+using namespace std;
+
+// Helper function to check if a destination exists in Task 5's warehouse_layout.csv
+bool isValidDestination(const string &dest) {
+  ifstream file("warehouse_layout.csv");
+  if (!file.is_open()) return true; // Fail open if file is missing so we don't break the whole program
+
+  string line;
+  getline(file, line); // skip header
+  while (getline(file, line)) {
+    // CSV format: id,name,type,parentId -> we want to match 'name' (second column)
+    size_t firstComma = line.find(',');
+    if (firstComma != string::npos) {
+      size_t secondComma = line.find(',', firstComma + 1);
+      if (secondComma != string::npos) {
+        string name = line.substr(firstComma + 1, secondComma - firstComma - 1);
+        if (name == dest) return true;
+      }
+    }
+  }
+  return false;
+}
+
+struct Node {
+  string command;
+  Node *next;
+
+  Node(string cmd) {
+    command = cmd;
+    next = nullptr;
+  }
+};
 
 
-namespace RobotNavigation
-{
-    using namespace std;
+class PathStack {
+private:
+  Node *top;
 
-    struct Node
-    {
-        string command;
-        Node *next;
+public:
+  PathStack() { top = nullptr; }
 
-        Node(string cmd)
-        {
-            command = cmd;
-            next = nullptr;
-        }
-    };
+  // Returns true if no steps have been recorded yet
+  bool isEmpty() { return top == nullptr; }
 
-    class PathStack
-    {
-    private:
-        Node *top;
+  // PUSH: Record a new movement step and print it to the log
+  void push(const string &cmd) {
+    Node *newNode = new Node(cmd);
+    newNode->next = top;
+    top = newNode;
+    cout << "  [MOVE] " << cmd << endl;
+  }
 
-    public:
-        PathStack()
-        {
-            top = nullptr;
-        }
+  // SILENT POP: Remove and return the top step without printing.
+  // Used during obstacle backtracking so we don't double-log.
+  string silentPop() {
+    if (isEmpty())
+      return "";
 
-        bool isEmpty()
-        {
-            return top == nullptr;
-        }
+    Node *temp = top;
+    string poppedCmd = temp->command;
+    top = top->next;
+    delete temp;
+    return poppedCmd;
+  }
 
-        // Standard push for building history (Prints "Robot Moved: ...")
-        void push(string cmd)
-        {
-            Node *newNode = new Node(cmd);
-            newNode->next = top;
-            top = newNode;
-            cout << "Robot Moved: " << cmd << endl;
-        }
+  // POP: Remove and return the top step (used during reverse navigation)
+  string pop() {
+    if (isEmpty()) {
+      cout << "  Stack is empty — robot is back at the start." << endl;
+      return "";
+    }
+    return silentPop();
+  }
 
-        // Silent pop used during manual backtracking corrections 
-        // to prevent duplicate tracking prints
-        string silentPop()
-        {
-            if (isEmpty())
-            {
-                return "";
-            }
-            Node *temp = top;
-            string poppedCmd = temp->command;
-            top = top->next;
-            delete temp;
-            return poppedCmd;
-        }
+  // PEEK: Look at the most recent step without removing it
+  string peek() {
+    if (isEmpty())
+      return "(empty)";
+    return top->command;
+  }
 
-        // POP: Used for the final reverse navigation log printout
-        string pop()
-        {
-            if (isEmpty())
-            {
-                cout << "The path is empty. Robot is at the start." << endl;
-                return "";
-            }
-            return silentPop();
-        }
+  // Destructor: free all remaining nodes when PathStack goes out of scope
+  ~PathStack() {
+    while (!isEmpty())
+      silentPop();
+  }
+};
 
-        // PEEK: Look at the last step without removing it
-        string peek()
-        {
-            if (isEmpty())
-            {
-                return "";
-            }
-            return top->command;
-        }
+string getReverseCommand(const string &cmd) {
+  if (cmd == "Move Forward")
+    return "Move Backward";
+  if (cmd == "Move Backward")
+    return "Move Forward";
+  if (cmd == "Turn Left")
+    return "Turn Right";
+  if (cmd == "Turn Right")
+    return "Turn Left";
+  return "Stop";
+}
 
-        // Destructor to clean up memory when the program ends
-        ~PathStack()
-        {
-            while (!isEmpty())
-            {
-                silentPop();
-            }
-        }
-    };
+void runDemo(const string &robotID, const string &destination) {
+  PathStack robotPath;
 
-    string getReverseCommand(string cmd)
-    {
-        if (cmd == "Move Forward")      return "Move Backward";
-        if (cmd == "Move Backward")     return "Move Forward";
-        if (cmd == "Turn Left")         return "Turn Right";
-        if (cmd == "Turn Right")        return "Turn Left";
-        return "Stop";
+  // --- Header: show which robot and where it is going ---
+  cout << "\n=========================================" << endl;
+  cout << "   ROBOT NAVIGATION & PATH TRACKING     " << endl;
+  cout << "=========================================" << endl;
+  cout << "  Robot ID   : " << robotID << endl;
+  cout << "  Destination: " << destination << endl;
+  cout << "=========================================\n" << endl;
+
+  // ---- PHASE 1: Forward Navigation ----
+  cout << "--- Phase 1: Forward Navigation (Moving to Item) ---" << endl;
+  cout << "Commands:" << endl;
+  cout << "  [1] Move Forward    [2] Turn Left" << endl;
+  cout << "  [3] Turn Right      [4] Move Backward" << endl;
+  cout << "  [5] Obstacle!       [6] View Last Step" << endl;
+  cout << "  [7] Item Reached    (ends forward navigation)\n" << endl;
+
+  int navChoice;
+  bool itemReached = false;
+
+  do {
+    cout << "[" << robotID << " -> " << destination << "] > ";
+    if (!(cin >> navChoice)) {
+      cin.clear();
+      cin.ignore(10000, '\n');
+      cout << "  Invalid input. Please enter a number.\n";
+      continue;
+    }
+    cin.ignore(10000, '\n');
+
+    switch (navChoice) {
+    case 1:
+      robotPath.push("Move Forward");
+      break;
+
+    case 2:
+      robotPath.push("Turn Left");
+      break;
+
+    case 3:
+      robotPath.push("Turn Right");
+      break;
+
+    case 4:
+      robotPath.push("Move Backward");
+      break;
+
+    case 5:
+      // Obstacle handling: undo the last step and backtrack
+      cout << "\n  [ALERT] Obstacle detected!" << endl;
+      if (!robotPath.isEmpty()) {
+        string blockedStep = robotPath.silentPop();
+        cout << "  Backtracking: reversing '" << blockedStep
+             << "' -> executing '" << getReverseCommand(blockedStep) << "'"
+             << endl;
+        cout << "  Path corrected. Choose a detour.\n" << endl;
+      } else {
+        cout << "  No steps to backtrack - robot is at the starting point.\n"
+             << endl;
+      }
+      break;
+
+    case 6:
+      // Peek: show the most recent step without altering the stack
+      cout << "  Last recorded step: " << robotPath.peek() << endl;
+      break;
+
+    case 7:
+      itemReached = true;
+      break;
+
+    default:
+      cout << "  Invalid command. Please choose 1–7." << endl;
     }
 
-    void runDemo()
-    {
-        PathStack robotPath;
+  } while (!itemReached);
 
-        cout << "--- Forward Navigation (To Item) ---" << endl;
+  // ---- Arrival confirmation ----
+  cout << "\n  [SUCCESS] Robot " << robotID << " has arrived at '"
+       << destination << "' and picked up the item." << endl;
 
-        robotPath.push("Move Forward");
-        robotPath.push("Turn Left");
-        robotPath.push("Move Forward");
+  // ---- PHASE 2: Reverse Navigation ----
+  cout << "\n--- Phase 2: Reverse Navigation (Returning to Start) ---" << endl;
 
-        cout << "\n[ALERT] Obstacle detected!" << endl;
-        if (!robotPath.isEmpty())
-        {
-            // Silently drop the blocked path step from stack data
-            string badStep = robotPath.silentPop(); 
-            cout << "Backtracking: Executed '" << getReverseCommand(badStep) << "'." << endl;
+  if (robotPath.isEmpty()) {
+    cout << "  No path was recorded. Robot remains at current position."
+         << endl;
+  } else {
+    int step = 1;
+    while (!robotPath.isEmpty()) {
+      string lastStep = robotPath.pop(); // retrieve last forward step
+      string reverseAction = getReverseCommand(lastStep);
 
-            cout << "Taking a detour..." << endl;
-            robotPath.push("Turn Right");
-            robotPath.push("Move Forward");
-            robotPath.push("Move Forward");
-        }
-
-        cout << "\nItem successfully picked up! Preparing to return..." << endl;
-        cout << "\nLast recorded step before return: " << robotPath.peek() << endl;
-
-        cout << "\n--- Reverse Navigation (Returning to Start) ---" << endl;
-
-        // Iterates through the corrected path history (6 steps)
-        while (!robotPath.isEmpty())
-        {
-            string lastStep = robotPath.pop();
-            string reverseAction = getReverseCommand(lastStep);
-
-            cout << "Popped: " << lastStep
-                 << " | Executing Reverse Action: " << reverseAction << endl;
-        }
-
-        cout << "\nRobot has safely returned to the starting point." << endl;
+      cout << "  Step " << step++ << ": reverse of '" << lastStep
+           << "' -> executing '" << reverseAction << "'" << endl;
     }
+
+    cout << "\n  [DONE] Robot " << robotID
+         << " has safely returned to the starting point." << endl;
+  }
+
+  cout << "=========================================\n" << endl;
+}
+
+void runMenu(
+    RobotAssignment::CircularLinkedList<RobotAssignment::Robot> &robotList) {
+  // Show the robot list from Task 2
+  cout << "\n--- Available Robots (from Task 2: Robot Assignment) ---" << endl;
+  robotList.display();
+
+  string navRobotID, navDestination;
+
+  // Keep prompting until the user enters a Robot ID that actually exists
+  do {
+    cout << "\nEnter the Robot ID to navigate: ";
+    cin >> navRobotID;
+    cin.ignore(10000, '\n');
+
+    if (!robotList.robotExists(navRobotID))
+      cout << "  [!] Robot ID '" << navRobotID
+           << "' not found. Please enter a valid Robot ID from the list above.\n";
+
+  } while (!robotList.robotExists(navRobotID));
+
+  do {
+    cout << "Enter item destination (e.g. Zone A - Receiving, Shelf A1-01): ";
+    getline(cin, navDestination);
+    
+    if (!isValidDestination(navDestination)) {
+      cout << "  [!] Destination '" << navDestination 
+           << "' not found in warehouse_layout.csv. Please try again.\n\n";
+    }
+  } while (!isValidDestination(navDestination));
+
+  runDemo(navRobotID, navDestination);
+}
 
 } // namespace RobotNavigation

@@ -50,7 +50,7 @@ int main()
             RobotAssignment::menu(robotList);
             break;
         case 3:
-            RobotNavigation::runDemo();
+            RobotNavigation::runMenu(robotList);
             break;
         case 4:
             ItemManager::runMenu();

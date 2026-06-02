@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 
-// Self-implemented resizable array (replaces std::vector)
 template <typename T>
 class DynamicArray
 {
@@ -93,7 +92,6 @@ public:
     void clear() { sz = 0; }
 };
 
-// Self-implemented linked-list queue (replaces std::queue)
 // Used for BFS and level-order traversal
 template <typename T>
 class CustomQueue
@@ -150,7 +148,6 @@ public:
     bool isEmpty() const { return count == 0; }
 };
 
-// Self-implemented linked-list stack (replaces std::stack)
 // Used for DFS and path reconstruction
 template <typename T>
 class CustomStack

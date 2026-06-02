@@ -287,6 +287,9 @@ public:
     void clear();
 };
 
-void runWarehouseMenu();
+namespace WarehouseLayout
+{
+    void runMenu();
+}
 
 #endif

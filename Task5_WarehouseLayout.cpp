@@ -455,7 +455,10 @@ void buildGraph(WarehouseTree &tree, WarehouseGraph &graph)
 // Main - menu-driven interface
 // ============================================================
 
-void runWarehouseMenu()
+namespace WarehouseLayout
+{
+
+void runMenu()
 {
     WarehouseTree tree;
     WarehouseGraph graph;
@@ -469,17 +472,15 @@ void runWarehouseMenu()
     {
         cout << "\n=== Warehouse Layout & Navigation ===" << endl;
         cout << " 1. Display Layout" << endl;
-        cout << " 2. Display All Locations" << endl;
-        cout << " 3. Add Zone" << endl;
-        cout << " 4. Add Aisle" << endl;
-        cout << " 5. Add Shelf" << endl;
-        cout << " 6. Remove Location" << endl;
-        cout << " 7. Find Shortest Path" << endl;
-        cout << " 8. Pre-Order Traversal" << endl;
-        cout << " 9. Level-Order Traversal" << endl;
-        cout << "10. BFS Traversal (Graph)" << endl;
-        cout << "11. DFS Traversal (Graph)" << endl;
-        cout << "12. Show Graph Connections" << endl;
+        cout << " 2. Add Zone" << endl;
+        cout << " 3. Add Aisle" << endl;
+        cout << " 4. Add Shelf" << endl;
+        cout << " 5. Remove Location" << endl;
+        cout << " 6. Find Shortest Path" << endl;
+        cout << " 7. Pre-Order Traversal" << endl;
+        cout << " 8. Level-Order Traversal" << endl;
+        cout << " 9. BFS Traversal (Graph)" << endl;
+        cout << "10. DFS Traversal (Graph)" << endl;
         cout << " 0. Exit" << endl;
         cout << "Choice: ";
 
@@ -504,16 +505,6 @@ void runWarehouseMenu()
 
         case 2:
         {
-            DynamicArray<WarehouseNode *> nodes = tree.getAllNodes();
-            cout << "\nAll Locations:" << endl;
-            for (int i = 0; i < nodes.getSize(); i++)
-                cout << "  [" << nodes[i]->id << "] " << nodes[i]->name
-                     << " (" << getTypeName(nodes[i]->type) << ")" << endl;
-            break;
-        }
-
-        case 3:
-        {
             string name;
             cout << "Enter zone name: ";
             getline(cin, name);
@@ -526,7 +517,7 @@ void runWarehouseMenu()
             break;
         }
 
-        case 4:
+        case 3:
         {
             DynamicArray<WarehouseNode *> nodes = tree.getAllNodes();
             cout << "Available zones:" << endl;
@@ -559,7 +550,7 @@ void runWarehouseMenu()
             break;
         }
 
-        case 5:
+        case 4:
         {
             DynamicArray<WarehouseNode *> nodes = tree.getAllNodes();
             cout << "Available aisles:" << endl;
@@ -592,7 +583,7 @@ void runWarehouseMenu()
             break;
         }
 
-        case 6:
+        case 5:
         {
             int id;
             cout << "Location ID to remove: ";
@@ -624,7 +615,7 @@ void runWarehouseMenu()
             break;
         }
 
-        case 7:
+        case 6:
         {
             int src, dest;
             cout << "Source ID: ";
@@ -677,15 +668,15 @@ void runWarehouseMenu()
             break;
         }
 
-        case 8:
+        case 7:
             tree.preOrderTraversal();
             break;
 
-        case 9:
+        case 8:
             tree.levelOrderTraversal();
             break;
 
-        case 10:
+        case 9:
         {
             int start;
             cout << "Start ID (0 for root): ";
@@ -711,7 +702,7 @@ void runWarehouseMenu()
             break;
         }
 
-        case 11:
+        case 10:
         {
             int start;
             cout << "Start ID (0 for root): ";
@@ -737,11 +728,6 @@ void runWarehouseMenu()
             break;
         }
 
-        case 12:
-            cout << "\nGraph Connections:" << endl;
-            graph.displayConnections(tree);
-            break;
-
         default:
             cout << "Invalid choice." << endl;
         }
@@ -749,3 +735,5 @@ void runWarehouseMenu()
 
     cout << "Returning to main menu." << endl;
 }
+
+} // namespace WarehouseLayout

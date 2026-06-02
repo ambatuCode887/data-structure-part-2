@@ -16,7 +16,7 @@ int main()
     RobotAssignment::CircularLinkedList<RobotAssignment::Robot> robotList;
     RobotAssignment::loadRobotsFromCSV(robotList, "robots.csv");
 
-    int choice;
+    int choice = -1;
     do
     {
         cout << "\n===================================================\n";
@@ -35,6 +35,7 @@ int main()
         {
             cin.clear();
             cin.ignore(10000, '\n');
+            choice = -1;
             cout << "Invalid input." << endl;
             continue;
         }
@@ -55,7 +56,7 @@ int main()
             ItemManager::runMenu();
             break;
         case 5:
-            runWarehouseMenu();
+            WarehouseLayout::runMenu();
             break;
         case 0:
             break;

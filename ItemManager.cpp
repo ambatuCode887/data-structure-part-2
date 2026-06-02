@@ -106,7 +106,6 @@ namespace ItemManager
         }
         else
         {
-            cout << "Error: Item ID already exists.\n";
             return node;
         }
 
@@ -344,8 +343,10 @@ namespace ItemManager
             {
                 int id;
                 string name, cat, loc;
-                cout << "Item ID: ";
-                cin >> id;
+                
+                cout << "Item ID: "; 
+                cin >> id; 
+
                 while (cin.fail()) 
                 {
                     clearInput();
@@ -355,15 +356,39 @@ namespace ItemManager
                 }
                 clearInput();
 
-                cout << "Name: ";
+                if (searchByID(root, id) != nullptr)
+                {
+                    cout << "[!] Error: Item ID " << id << " already exists in the database.\n";
+                    continue;
+                }
+                
+                cout << "Name: "; 
                 getline(cin, name);
-                cout << "Category: ";
-                getline(cin, cat);
-                cout << "Location: ";
-                getline(cin, loc);
+                while (name.empty())
+                {
+                    cout << "[!] Name cannot be empty. Please enter a valid name.\nName: ";
+                    getline(cin, name);
+                }
 
+                cout << "Category: "; 
+                getline(cin, cat);
+                while (cat.empty())
+                {
+                    cout << "[!] Category cannot be empty. Please enter a valid category.\nCategory: ";
+                    getline(cin, cat);
+                }
+
+                cout << "Location: "; 
+                getline(cin, loc);
+                while (loc.empty())
+                {
+                    cout << "[!] Location cannot be empty. Please enter a valid location.\nLocation: ";
+                    getline(cin, loc);
+                }
+                
                 root = insertItem(root, id, name, cat, loc);
-                cout << "Item inserted.\n";
+                cout << "Item successfully inserted.\n";
+
             }
             else if (choice == 2)
             {

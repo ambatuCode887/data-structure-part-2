@@ -119,7 +119,14 @@ namespace RobotAssignment
             cout << "6. Move rotation pointer" << endl;
             cout << "7. Exit" << endl;
             cout << "Enter your choice: ";
-            cin >> choice;
+            if (!(cin >> choice)) // added this to handle non-integer input for menu.
+            {
+                cin.clear();
+                cin.ignore(10000, '\n');
+                cout << "Invalid input. Please enter a number." << endl;
+                continue;
+            }
+            cin.ignore(10000, '\n');
 
             if (choice == 1)
             {

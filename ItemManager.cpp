@@ -314,7 +314,7 @@ namespace ItemManager
 
     void runMenu()
     {
-        int choice;
+        int choice = -1;
         do
         {
             cout << "\n===================================================\n";
@@ -331,6 +331,13 @@ namespace ItemManager
             cout << "===================================================\n";
             cout << "  > ";
             cin >> choice;
+            if (cin.fail()) 
+            {
+                clearInput();
+                cout << "\n[!] Invalid input. Please enter a number from the menu.\n";
+                choice = -1;
+                continue; 
+            }
             clearInput();
 
             if (choice == 1)
@@ -339,6 +346,13 @@ namespace ItemManager
                 string name, cat, loc;
                 cout << "Item ID: ";
                 cin >> id;
+                while (cin.fail()) 
+                {
+                    clearInput();
+                    cout << "[!] Invalid format. Item ID must be a number.\n";
+                    cout << "Item ID: ";
+                    cin >> id;
+                }
                 clearInput();
 
                 cout << "Name: ";
@@ -397,8 +411,14 @@ namespace ItemManager
                 cin >> target;
                 clearInput();
 
-                root = deleteItem(root, target);
-                cout << "Deletion processed.\n";
+                if (searchByID(root, target) == nullptr) 
+                {
+                    cout << "Error: Item ID " << target << " does not exist in the database.\n";
+                } else 
+                {
+                    root = deleteItem(root, target);
+                    cout << "Item successfully deleted.\n";
+                }
             }
             else if (choice == 6)
             {
